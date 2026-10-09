@@ -3,6 +3,20 @@
 version = 4
 
 [[package]]
+name = "agents_demo"
+version = "0.1.0"
+dependencies = [
+ "hmac",
+ "http",
+ "log",
+ "p256",
+ "scrypt",
+ "serde_json",
+ "sha2",
+ "spacetimedb",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
