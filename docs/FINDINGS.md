@@ -142,9 +142,9 @@ Offsets match tzdata (via Python's `zoneinfo`) at 25,098 instants, covering both
 - **Procedures interleave with other calls while they wait on HTTP.** During an agents run (a procedure blocked on a
   provider), reducers and other procedures for the same database run normally. The agents thread lock, the
   `thread_busy` rejection and mid-run cancellation rely on this, and the suite tests them with a held mock response.
-- **Scheduled reducers were reachable over HTTP here.** On the loopback dev server (standalone 2.11.0 built from
-  source), `POST /call/agents_thread_lock_sweep` ran the reducer: the scheduler-only check answered 530
-  `agents.not_authorized`. That contradicts the 404 noted above. Either way, the ports keep the check.
+- **Scheduled reducer calls in the agents tests reached the reducer** (530 `agents.not_authorized` from
+  `POST /call/agents_thread_lock_sweep`) because the test made the call with the owner's token. That matches the note
+  above: owner-only, not public.
 - **Re-serialized JSON in agents:** TS stringifies parsed provider values (Anthropic tool inputs) and host values
   (response formats). Rust (`serde_json` with `preserve_order`) and C# (a small ordered tree over `JsonDocument`) only
   need JS's output rules for that: integer-like keys first, and `Number::toString` formatting. Lone-surrogate escapes
