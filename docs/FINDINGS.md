@@ -143,8 +143,9 @@ Offsets match tzdata (via Python's `zoneinfo`) at 25,098 instants, covering both
   provider), reducers and other procedures for the same database run normally. The agents thread lock, the
   `thread_busy` rejection and mid-run cancellation rely on this, and the suite tests them with a held mock response.
 - **Scheduled reducer calls in the agents tests reached the reducer** (530 `agents.not_authorized` from
-  `POST /call/agents_thread_lock_sweep`) because the test made the call with the owner's token. That matches the note
-  above: owner-only, not public.
+  `POST /call/agents_thread_lock_sweep`), most likely because that probe used the owner's token. Re-checked on
+  2026-10-09: a fresh anonymous identity gets 404 for scheduled reducers, and the owner reaches them. That matches the
+  note above: owner-only, not public.
 - **Re-serialized JSON in agents:** TS stringifies parsed provider values (Anthropic tool inputs) and host values
   (response formats). Rust (`serde_json` with `preserve_order`) and C# (a small ordered tree over `JsonDocument`) only
   need JS's output rules for that: integer-like keys first, and `Number::toString` formatting. Lone-surrogate escapes
