@@ -332,6 +332,18 @@ pub fn js_json(v: &Value) -> String {
     out
 }
 
+/// A canonical array index ("0" to "4294967294"), which JS orders before other keys.
+fn array_index(k: &str) -> Option<u64> {
+    if k.is_empty()
+        || k.len() > 10
+        || !k.bytes().all(|b| b.is_ascii_digit())
+        || (k.len() > 1 && k.starts_with('0'))
+    {
+        return None;
+    }
+    k.parse::<u64>().ok().filter(|n| *n < 4_294_967_295)
+}
+
 fn write_js_json(v: &Value, out: &mut String) {
     match v {
         Value::Number(n) => match (n.as_i64(), n.as_u64()) {
@@ -350,8 +362,11 @@ fn write_js_json(v: &Value, out: &mut String) {
             out.push(']');
         }
         Value::Object(map) => {
+            // JS property order: array-index keys ascending, then insertion order.
+            let mut entries: Vec<(&String, &Value)> = map.iter().collect();
+            entries.sort_by_key(|(k, _)| array_index(k).map_or((1, 0), |n| (0, n)));
             out.push('{');
-            for (i, (k, item)) in map.iter().enumerate() {
+            for (i, (k, item)) in entries.into_iter().enumerate() {
                 if i > 0 {
                     out.push(',');
                 }

@@ -151,7 +151,8 @@ public static class AgentsJs
             case JsObject o:
                 sb.Append('{');
                 var first = true;
-                foreach (var (k, x) in o)
+                // JS property order: array-index keys ascending, then insertion order.
+                foreach (var (k, x) in o.OrderBy(e => ArrayIndex(e.Key) is { } n ? (0, n) : (1, 0L)))
                 {
                     if (!first) sb.Append(',');
                     first = false;
@@ -171,6 +172,13 @@ public static class AgentsJs
                 break;
             default: throw new ArgumentException($"not a JSON value: {v.GetType().Name}");
         }
+    }
+
+    /// <summary>A canonical array index ("0" to "4294967294"), which JS orders before other keys.</summary>
+    static long? ArrayIndex(string k)
+    {
+        if (k.Length is 0 or > 10 || !k.All(char.IsAsciiDigit) || (k.Length > 1 && k[0] == '0')) return null;
+        return long.TryParse(k, CultureInfo.InvariantCulture, out var n) && n < 4294967295 ? n : null;
     }
 
     /// <summary>Number.prototype.toString: shortest round-trip digits, exponent outside 1e-7..1e21.</summary>

@@ -103,6 +103,7 @@ const invokeInputs = [
   ['kinds', '{"b":true,"s":"x","f":1.5,"g":1,"i8":0,"u8":0,"i16":0,"u16":0,"i32":0,"u32":0,"i64":0,"u64":-5}'],
   ['kinds', '{"b":true,"s":"x","f":1.5,"g":1,"i8":0.5,"u8":0,"i16":0,"u16":0,"i32":0,"u32":0,"i64":0,"u64":0}'],
   ['nested', '{"point":{"x":1,"y":-2},"tags":["a","b"]}'],
+  ['nested', '{"point":{"y":-2,"x":1,"x":3},"tags":["a"],"tags":["b"]}'],
   ['nested', '{"tags":[],"point":{"y":2,"x":1},"maybe":[1,2,255]}'],
   ['nested', '{"point":{"x":1},"tags":[]}'],
   ['nested', '{"point":{"x":1,"y":2,"z":3},"tags":[]}'],
@@ -215,7 +216,7 @@ const requests = [
   },
   {
     apiKey: 'k', model: 'm', responseFormat: { type: 'json_schema', scale: 1.0, tiny: 1e-7, huge: 1e21 },
-    messages: [{ role: 'assistant', content: 'x', tool_calls: [toolCall('n', 'kinds', '{"a":1.0,"b":1e21,"c":1e-7,"d":2.50,"e":-0,"f":1e300,"g":5e-324,"h":123e-20,"i":-0.0,"j":0.1,"k":100,"l":1e20}')] }],
+    messages: [{ role: 'assistant', content: 'x', tool_calls: [toolCall('n', 'kinds', '{"a":1.0,"b":1e21,"c":1e-7,"d":2.50,"e":-0,"f":1e300,"g":5e-324,"h":123e-20,"i":-0.0,"j":0.1,"k":100,"l":1e20}'), toolCall('o', 'kinds', '{"z":1,"5":2,"01":3,"3":{"y":0,"1":1},"z":9}')] }],
   },
   { apiKey: 'k', model: 'm', messages: [{ role: 'user', content: 'unicode é \u{1f600} "quoted" \\ \n\t\u0001' }], tools: [] },
 ];
@@ -247,6 +248,7 @@ const anthropicResponses = [
   { stop_reason: 'refusal', content: [{ type: 'thinking', thinking: 'hm' }], usage: { input_tokens: '3', output_tokens: 4.5 } },
   { content: [{ type: 'tool_use', id: 1, name: null, input: { nested: { a: [1, 'b', null, true] } } }] },
   '{"content":[{"type":"tool_use","id":"f","name":"n","input":{"a":1.0,"b":1e21,"c":-1e-7,"d":12.50,"e":1E5}}]}',
+  '{"content":[{"type":"tool_use","id":"k","name":"n","input":{"b":1,"10":2,"2":3,"01":4,"4294967295":5,"4294967294":6,"a":{"1":0,"x":1,"0":2},"b":7}}]}',
   { content: 'nope' },
   {},
   [],
