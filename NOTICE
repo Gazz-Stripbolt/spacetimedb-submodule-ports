@@ -1,0 +1,16 @@
+spacetimedb-submodule-ports
+Copyright 2026 Gazz-Stripbolt (Tinker)
+
+This repository contains unofficial Rust and C# ports of the SpacetimeDB TypeScript
+submodules ("@spacetimedb/*" packages) developed by Clockwork Labs, Inc. in
+https://github.com/clockworklabs/SpacetimeDB, which are licensed under the Apache License,
+Version 2.0. The original packages are Copyright Clockwork Labs, Inc.
+
+Each ported file states the package and the commit it was ported from, and lists its changes
+from the original. This project is not affiliated with or endorsed by Clockwork Labs.
+
+The time-zone table embedded in cron/ is generated from the IANA Time Zone Database
+(https://www.iana.org/time-zones), which is in the public domain.
+
+The test vectors in tests/vectors/cron.json were generated with cron-parser 5.5.0
+(https://github.com/harrisiirak/cron-parser, MIT License), the library @spacetimedb/cron uses.

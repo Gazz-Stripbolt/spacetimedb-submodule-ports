@@ -1,0 +1,9 @@
+{
+  "name": "spacetimedb-submodule-ports",
+  "private": true,
+  "type": "module",
+  "description": "Test suites for the Rust and C# ports. No dependencies: plain Node 22 and SpacetimeDB's HTTP API.",
+  "scripts": {
+    "test": "echo 'run scripts/e2e.sh <package> <rust|csharp>'"
+  }
+}

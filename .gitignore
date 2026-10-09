@@ -1,0 +1,6 @@
+target/
+*.wasm
+spacetime.local.json
+node_modules/
+bin/
+obj/

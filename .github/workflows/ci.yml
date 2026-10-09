@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Rust toolchain (wasm32)
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown --component clippy,rustfmt
+          rustup default stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Rust
+        run: |
+          cargo fmt --all --check
+          cargo clippy --release --target wasm32-unknown-unknown -- -D warnings
+      - name: C#
+        env:
+          EXPERIMENTAL_WASM_AOT: 1   # what `spacetime build` sets for NativeAOT-LLVM (net10.0) projects
+        run: for p in crypto retry rate-limit cron; do dotnet build $p/demo/csharp -c Release; done
+      - name: The embedded time-zone table is in sync with its generator
+        run: |
+          python3 tools/gen-tz.py
+          git diff --stat --exit-code -- cron/rust/cron.rs cron/csharp/Cron.cs || echo "::warning::the runner's tzdata differs from the committed table (that's fine; the table is pinned)"
+
+  # Every package in every language against the same test suite.
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [crypto, retry, rate-limit, cron]
+        lang: [rust, csharp]
+    name: e2e (${{ matrix.package }}, ${{ matrix.lang }})
+    steps:
+      - uses: actions/checkout@v5
+      - name: Rust toolchain (wasm32)
+        if: matrix.lang == 'rust'
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+      - uses: Swatinem/rust-cache@v2
+        if: matrix.lang == 'rust'
+      - uses: actions/setup-dotnet@v4
+        if: matrix.lang == 'csharp'
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install SpacetimeDB CLI
+        run: |
+          curl -sSf https://install.spacetimedb.com | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Start SpacetimeDB
+        run: |
+          nohup spacetime start --in-memory --listen-addr 127.0.0.1:3000 --non-interactive > server.log 2>&1 &
+          for i in $(seq 60); do curl -sf -o /dev/null http://127.0.0.1:3000/v1/ping && break; sleep 1; done
+      - run: scripts/e2e.sh ${{ matrix.package }} ${{ matrix.lang }}
+      - name: Server log
+        if: failure()
+        run: tail -n 200 server.log || true
+
+  # The Rust and C# ports of each package expose the same schema.
+  parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [crypto, retry, rate-limit, cron]
+    name: parity (${{ matrix.package }})
+    steps:
+      - uses: actions/checkout@v5
+      - name: Rust toolchain (wasm32)
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install SpacetimeDB CLI
+        run: |
+          curl -sSf https://install.spacetimedb.com | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Start SpacetimeDB
+        run: |
+          nohup spacetime start --in-memory --listen-addr 127.0.0.1:3000 --non-interactive > server.log 2>&1 &
+          for i in $(seq 60); do curl -sf -o /dev/null http://127.0.0.1:3000/v1/ping && break; sleep 1; done
+      - run: scripts/parity.sh ${{ matrix.package }}

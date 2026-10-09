@@ -1,0 +1,6 @@
+[workspace]
+members = ["crypto/demo/rust", "retry/demo/rust", "rate-limit/demo/rust", "cron/demo/rust"]
+resolver = "2"
+
+[profile.release]
+opt-level = "s"
