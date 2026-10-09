@@ -106,3 +106,22 @@ Offsets match tzdata (via Python's `zoneinfo`) at 25,098 instants, covering both
   equal-cost paths is returned and how many nodes are expanded. grid ports TS's binary heap step for step and
   matches it on 240 generated maps.
 
+## Integrations (resend, stripe, posthog)
+
+- **Bug: a raw-identifier field breaks the Rust schema.** `#[derive(SpacetimeType)]` names fields with
+  `Ident::to_string()` (`crates/bindings-macro/src/sats.rs`, ~L63), so `pub r#type: Option<String>` becomes a column
+  called `r#type`. Publishing then fails with "Local module schema inspection failed". Stripe's
+  `ValidateStripePriceResult.type` is `price_type` in both ports. Fix: `ident.unraw()`.
+- **Rust can't filter an index on an `Option` column.** `Option<String>` isn't a `FilterableValue`, so lookups like
+  `listEmailsByUserId` scan the table. The ports still declare the indexes, for schema parity.
+- **Module HTTP to loopback is blocked** by standalone's SSRF protection. Testing against local mocks needs a server
+  built with `allow_loopback_http_for_tests` (`scripts/dev-server.sh`; CI caches it).
+- **C# `NewUuidV7()`** exists on `ReducerContext`, `ProcedureContext` and `HandlerContext`, but not on the
+  `WithTx` context, so procedures make their UUIDs before entering the transaction.
+- **C# accessor casing:** `PostHogOutbox` would canonicalize to `post_hog_outbox`. Accessors are spelled `Posthog…`
+  to get `posthog_outbox` as in TS.
+- **`HttpMethod` is ambiguous** in C# modules with implicit usings (`System.Net.Http.HttpMethod`); alias it to
+  `SpacetimeDB.HttpMethod`.
+- **Build-time configuration:** a drop-in file can't read the environment at runtime, so tests point resend and
+  stripe at mocks at build time: `option_env!` in Rust, and an optional `static partial void` hook in C# that the
+  demo csproj generates.

@@ -29,7 +29,7 @@ pinned to the upstream commit and kept in sync as the packages evolve.
 | [**retry**](retry) | Background tasks with exponential backoff, attempt history, admins | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
 | [**rate-limit**](rate-limit) | Fixed-window limits per scope and actor, expiry sweep, admins | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
 | [**cron**](cron) | Calendar (cron expressions, time zones) and interval jobs | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
-| resend | Email via Resend | 🚧 | 🚧 | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) |
+| [**resend**](resend) | Email via Resend, delivery tracking from signed webhooks, admins | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
 | [**presence**](presence) | Who is here: leases that expire, heartbeat, online view, sweep | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
 | [**api-keys**](api-keys) | Hashed server-to-server keys, scopes, rotation, revocation, usage log | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
 | [**grid**](grid) | Square/hex maps, units, obstacles, A* paths, movement ranges | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
@@ -37,8 +37,8 @@ pinned to the upstream commit and kept in sync as the packages evolve.
 | auth | Password and OAuth login, sessions, profiles | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
 | files | Uploads, visibility, HTTP serving | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
 | agents | LLM agents, tool calls, embeddings | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
-| stripe | Customers, subscriptions, Checkout, webhooks | 🚧 | 🚧 | [#5906](https://github.com/clockworklabs/SpacetimeDB/pull/5906) |
-| posthog | Server-side analytics and feature flags | 🚧 | 🚧 | [#5907](https://github.com/clockworklabs/SpacetimeDB/pull/5907) |
+| [**stripe**](stripe) | Customers, subscriptions, Checkout, invoices, payments, signed webhooks | ✅ | ✅ | [#5906](https://github.com/clockworklabs/SpacetimeDB/pull/5906) `1639620` |
+| [**posthog**](posthog) | Server-side analytics (durable outbox, retries) and feature flags | ✅ | ✅ | [#5907](https://github.com/clockworklabs/SpacetimeDB/pull/5907) `b1063b1` |
 
 Also here: [**PORTING.md**](PORTING.md), the conventions every port follows and how to re-sync with upstream, and
 [**docs/FINDINGS.md**](docs/FINDINGS.md), the SpacetimeDB quirks and bugs the ports ran into.
@@ -88,6 +88,13 @@ package expose an **identical schema** ([`tests/schema-parity.mjs`](tests/schema
 | api-keys | Key derivation, hashing and normalized JSON **byte-identical to TS** (Node HMAC / SHA-256 / `JSON.stringify(JSON.parse(x))`), config, create, verify and its usage log, rotate, revoke, expiry, the 50-key cap, retention (14) |
 | grid | Upstream pathfinding and procedure tests, **240** random maps matching the TS A* and Dijkstra exactly (paths, costs, expansions, order), modes, cells, entities, paths, ranges, cascades (13) |
 | lobby | **300** ranked selections and **300** Elo updates from the TS code, room lifecycle, queues, ranked pools and draws, views, config and sweep (13) |
+| resend | Config, admins, send validation and body, idempotency, cancel, passthrough, Svix webhooks (good, bad, stale, rotated), status order, dedupe, replay (22) |
+| stripe | Config, form encoding, customers, Checkout, price checks, portal, subscription updates, signed webhooks and limits, every handled event, stale and out-of-order events, replay, pruning (28) |
+| posthog | Validation, idempotency, the batch body, backoff and retry limits, capture, feature flags, admin views, retention, the real scheduler (13) |
+
+resend, stripe and posthog talk to local mock APIs ([`tests/mock-http.mjs`](tests/mock-http.mjs)), never the real
+services. Module HTTP to 127.0.0.1 needs a server built with SpacetimeDB's `allow_loopback_http_for_tests` feature:
+`scripts/dev-server.sh build` then `scripts/dev-server.sh start` in place of `spacetime start`.
 
 ```bash
 spacetime start                         # in another terminal

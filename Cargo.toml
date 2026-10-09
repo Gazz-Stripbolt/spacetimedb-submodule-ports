@@ -1,5 +1,5 @@
 [workspace]
-members = ["crypto/demo/rust", "retry/demo/rust", "rate-limit/demo/rust", "cron/demo/rust", "presence/demo/rust", "api-keys/demo/rust", "grid/demo/rust", "lobby/demo/rust"]
+members = ["crypto/demo/rust", "retry/demo/rust", "rate-limit/demo/rust", "cron/demo/rust", "presence/demo/rust", "api-keys/demo/rust", "grid/demo/rust", "lobby/demo/rust", "resend/demo/rust", "stripe/demo/rust", "posthog/demo/rust"]
 resolver = "2"
 
 [profile.release]

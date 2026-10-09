@@ -29,7 +29,7 @@ jobs:
       - name: C#
         env:
           EXPERIMENTAL_WASM_AOT: 1   # what `spacetime build` sets for NativeAOT-LLVM (net10.0) projects
-        run: for p in crypto retry rate-limit cron presence api-keys grid lobby; do dotnet build $p/demo/csharp -c Release; done
+        run: for p in crypto retry rate-limit cron presence api-keys grid lobby resend stripe posthog; do dotnet build $p/demo/csharp -c Release; done
       - name: The embedded time-zone table is in sync with its generator
         run: |
           python3 tools/gen-tz.py
@@ -74,6 +74,78 @@ jobs:
         if: failure()
         run: tail -n 200 server.log || true
 
+  # A standalone built with SpacetimeDB's own `allow_loopback_http_for_tests` feature, cached per
+  # version: the integration ports send HTTP to mock APIs on 127.0.0.1, which a stock server refuses.
+  dev-server:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install SpacetimeDB CLI
+        run: |
+          curl -sSf https://install.spacetimedb.com | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - id: ver
+        run: echo "version=$(spacetime --version | sed -n 's/.*tool version \([0-9.]*\);.*/\1/p')" >> "$GITHUB_OUTPUT"
+      - id: cache
+        uses: actions/cache@v4
+        with:
+          path: .dev-server/spacetimedb-standalone-${{ steps.ver.outputs.version }}
+          key: dev-server-${{ runner.os }}-${{ steps.ver.outputs.version }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          rustup toolchain install stable --profile minimal && rustup default stable
+          scripts/dev-server.sh build
+          rm -rf .dev-server/SpacetimeDB-*
+
+  # The integration ports, each against its mock API (resend :4201, stripe :4202, posthog :4203).
+  e2e-http:
+    needs: dev-server
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [resend, stripe, posthog]
+        lang: [rust, csharp]
+    name: e2e (${{ matrix.package }}, ${{ matrix.lang }})
+    steps:
+      - uses: actions/checkout@v5
+      - name: Rust toolchain (wasm32)
+        if: matrix.lang == 'rust'
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+      - uses: Swatinem/rust-cache@v2
+        if: matrix.lang == 'rust'
+      - uses: actions/setup-dotnet@v4
+        if: matrix.lang == 'csharp'
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install SpacetimeDB CLI
+        run: |
+          curl -sSf https://install.spacetimedb.com | sh -s -- --yes
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache/restore@v4
+        with:
+          path: .dev-server/spacetimedb-standalone-${{ needs.dev-server.outputs.version }}
+          key: dev-server-${{ runner.os }}-${{ needs.dev-server.outputs.version }}
+          fail-on-cache-miss: true
+      - name: Start SpacetimeDB (loopback HTTP allowed)
+        run: |
+          mkdir -p ~/.config/spacetime
+          nohup scripts/dev-server.sh start > server.log 2>&1 &
+          for i in $(seq 60); do curl -sf -o /dev/null http://127.0.0.1:3000/v1/ping && break; sleep 1; done
+      - run: scripts/e2e.sh ${{ matrix.package }} ${{ matrix.lang }}
+      - name: Server log
+        if: failure()
+        run: tail -n 200 server.log || true
+
   # The Rust and C# ports of each package expose the same schema.
   parity:
     runs-on: ubuntu-24.04
@@ -81,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby]
+        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby, resend, stripe, posthog]
     name: parity (${{ matrix.package }})
     steps:
       - uses: actions/checkout@v5

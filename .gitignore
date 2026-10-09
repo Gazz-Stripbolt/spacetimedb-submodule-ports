@@ -4,3 +4,4 @@ spacetime.local.json
 node_modules/
 bin/
 obj/
+.dev-server/
