@@ -43,9 +43,11 @@ engine's order, so it behaves like TS on the same engine, and documents it in [l
 
 ## Other behaviour worth knowing
 
-- **Scheduled reducers aren't reachable over HTTP:** `POST /v1/database/<db>/call/<scheduled reducer>` answers
-  404 "No such procedure" in 2.11. The ports still check the caller in every scheduled function, as TS cron does,
-  in case another transport allows it. (Upstream retry and rate-limit don't check.)
+- **Only the database owner can call scheduled reducers.** For any other identity,
+  `POST /v1/database/<db>/call/<scheduled reducer>` answers 404 "No such procedure" in 2.11. The owner's calls
+  (`spacetime call`, or HTTP with the owner's token) do reach the reducer, and so would a container running as the
+  database. So the ports check the caller in every scheduled function, as TS cron does. (Upstream retry and
+  rate-limit don't check.)
 - **Result-returning procedures** come back over HTTP as `[0, value]` / `[1, error]` with status 200, not as an
   HTTP error.
 - **SQL over a view doesn't keep the view's row order**, so "newest first" views can only be checked by contents.
