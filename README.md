@@ -34,9 +34,9 @@ pinned to the upstream commit and kept in sync as the packages evolve.
 | [**api-keys**](api-keys) | Hashed server-to-server keys, scopes, rotation, revocation, usage log | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
 | [**grid**](grid) | Square/hex maps, units, obstacles, A* paths, movement ranges | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
 | [**lobby**](lobby) | Matchmaking queues (unranked and ranked bands), rooms, seats, Elo | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
-| auth | Password and OAuth login, sessions, profiles | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
-| files | Uploads, visibility, HTTP serving | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
-| agents | LLM agents, tool calls, embeddings | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
+| [**auth**](auth) | Password and OAuth sign-in, ES256 sessions, connection binding, profiles, mail flows | ✅ | ✅ | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) `37ee2ad` |
+| [**files**](files) | Uploads, quotas, listing, visibility, HTTP serving with ETags | ✅ | ✅ | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) `37ee2ad` |
+| [**agents**](agents) | LLM agents over OpenRouter / OpenAI / Anthropic, tools, summaries, embedding recall | ✅ | ✅ | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) `37ee2ad` |
 | [**stripe**](stripe) | Customers, subscriptions, Checkout, invoices, payments, signed webhooks | ✅ | ✅ | [#5906](https://github.com/clockworklabs/SpacetimeDB/pull/5906) `1639620` |
 | [**posthog**](posthog) | Server-side analytics (durable outbox, retries) and feature flags | ✅ | ✅ | [#5907](https://github.com/clockworklabs/SpacetimeDB/pull/5907) `b1063b1` |
 
@@ -91,9 +91,12 @@ package expose an **identical schema** ([`tests/schema-parity.mjs`](tests/schema
 | resend | Config, admins, send validation and body, idempotency, cancel, passthrough, Svix webhooks (good, bad, stale, rotated), status order, dedupe, replay (22) |
 | stripe | Config, form encoding, customers, Checkout, price checks, portal, subscription updates, signed webhooks and limits, every handled event, stale and out-of-order events, replay, pruning (28) |
 | posthog | Validation, idempotency, the batch body, backoff and retry limits, capture, feature flags, admin views, retention, the real scheduler (13) |
+| auth | ES256 keys, PEMs, key ids, JWTs (**byte-identical** to noble: RFC 6979, low-S) and 25 verification cases, scrypt hashes, derived secrets, UUIDv7, PKCE, redirects and query parsing from the TS code; signup, login, connection binding, profiles, sessions, refresh, logout, rate limits, email verification, password reset, OAuth against mock Google and GitHub, sweep (20) |
+| files | Upstream cases (SHA-256, query parsing, keys, validation, headers), upload, quotas, rename, delete, listing and paging, visibility, private reads, the serve route with ETags, 304s and HEAD (7) |
+| agents | **61** tool invocations, **21** provider request bodies (**byte-identical** to TS), **31** response parses, retries, embeddings, history and summaries from the TS code; the upstream example end to end against mock OpenRouter, OpenAI and Anthropic: tool calls, cancellation, regeneration, summaries and recall, titles, token caps, image attachments, overrides, admins, stale locks (25) |
 
-resend, stripe and posthog talk to local mock APIs ([`tests/mock-http.mjs`](tests/mock-http.mjs)), never the real
-services. Module HTTP to 127.0.0.1 needs a server built with SpacetimeDB's `allow_loopback_http_for_tests` feature:
+resend, stripe and posthog talk to local mock APIs ([`tests/mock-http.mjs`](tests/mock-http.mjs)), and the auth and
+agents suites run their own mock OAuth and model providers, so no suite ever reaches a real service or uses a real key. Module HTTP to 127.0.0.1 needs a server built with SpacetimeDB's `allow_loopback_http_for_tests` feature:
 `scripts/dev-server.sh build` then `scripts/dev-server.sh start` in place of `spacetime start`.
 
 ```bash

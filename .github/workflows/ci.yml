@@ -29,7 +29,7 @@ jobs:
       - name: C#
         env:
           EXPERIMENTAL_WASM_AOT: 1   # what `spacetime build` sets for NativeAOT-LLVM (net10.0) projects
-        run: for p in crypto retry rate-limit cron presence api-keys grid lobby resend stripe posthog; do dotnet build $p/demo/csharp -c Release; done
+        run: for p in crypto retry rate-limit cron presence api-keys grid lobby resend stripe posthog auth files agents; do dotnet build $p/demo/csharp -c Release; done
       - name: The embedded time-zone table is in sync with its generator
         run: |
           python3 tools/gen-tz.py
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby]
+        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby, files]
         lang: [rust, csharp]
     name: e2e (${{ matrix.package }}, ${{ matrix.lang }})
     steps:
@@ -100,7 +100,8 @@ jobs:
           scripts/dev-server.sh build
           rm -rf .dev-server/SpacetimeDB-*
 
-  # The integration ports, each against its mock API (resend :4201, stripe :4202, posthog :4203).
+  # The ports that send HTTP, each against its mock (resend :4201, stripe :4202, posthog :4203, auth's OAuth
+  # provider :4310, agents' model providers :4320).
   e2e-http:
     needs: dev-server
     runs-on: ubuntu-24.04
@@ -108,7 +109,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [resend, stripe, posthog]
+        package: [resend, stripe, posthog, auth, agents]
         lang: [rust, csharp]
     name: e2e (${{ matrix.package }}, ${{ matrix.lang }})
     steps:
@@ -153,7 +154,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby, resend, stripe, posthog]
+        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby, resend, stripe, posthog, auth, files, agents]
     name: parity (${{ matrix.package }})
     steps:
       - uses: actions/checkout@v5

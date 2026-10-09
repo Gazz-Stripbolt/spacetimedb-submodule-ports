@@ -125,3 +125,25 @@ Offsets match tzdata (via Python's `zoneinfo`) at 25,098 instants, covering both
 - **Build-time configuration:** a drop-in file can't read the environment at runtime, so tests point resend and
   stripe at mocks at build time: `option_env!` in Rust, and an optional `static partial void` hook in C# that the
   demo csproj generates.
+
+## Accounts, files and agents (auth, files, agents)
+
+- **C# static initializers across partial files run in an undefined order.** A static field in one file that reads a
+  static from another (the auth demo's `DemoMock = AuthGoogle with { … }`) threw a `TypeInitializationException`
+  (a `NullReferenceException` inside) when the module loaded. The ports use static properties or lazily built fields
+  for anything that depends on another file's statics.
+- **`dotnet build` of a 2.11 module fails without `EXPERIMENTAL_WASM_AOT=1`:** the generated `FFI.cs` marks `Main`
+  `[UnmanagedCallersOnly]`, which the compiler rejects for an entry point ("CS8899"). `spacetime build`/`publish`
+  set the variable, and so does CI's build step.
+- **The HTTP API's request size limit:** a 4 MB `byte[]` argument, sent as JSON to `/call`, is over the limit. The
+  files suite exercises the 4 MB file limit with an upload generated inside the module.
+- **Procedures interleave with other calls while they wait on HTTP.** During an agents run (a procedure blocked on a
+  provider), reducers and other procedures for the same database run normally. The agents thread lock, the
+  `thread_busy` rejection and mid-run cancellation rely on this, and the suite tests them with a held mock response.
+- **Scheduled reducers were reachable over HTTP here.** On the loopback dev server (standalone 2.11.0 built from
+  source), `POST /call/agents_thread_lock_sweep` ran the reducer: the scheduler-only check answered 530
+  `agents.not_authorized`. That contradicts the 404 noted above. Either way, the ports keep the check.
+- **Re-serialized JSON in agents:** TS stringifies parsed provider values (Anthropic tool inputs) and host values
+  (response formats). Rust (`serde_json` with `preserve_order`) and C# (a small ordered tree over `JsonDocument`) only
+  need JS's output rules for that: integer-like keys first, and `Number::toString` formatting. Lone-surrogate escapes
+  still don't survive parsing in either.

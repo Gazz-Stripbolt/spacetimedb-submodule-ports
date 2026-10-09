@@ -3,8 +3,8 @@
 #
 #   scripts/e2e.sh <package> <rust|csharp>     (needs `spacetime start`)
 #
-# resend, stripe and posthog send HTTP to the suites' mock APIs on 127.0.0.1, which needs the
-# loopback-enabled server from scripts/dev-server.sh.
+# resend, stripe, posthog, auth (OAuth) and agents send HTTP to the suites' mocks on 127.0.0.1, which
+# needs the loopback-enabled server from scripts/dev-server.sh.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PKG=${1:?usage: $0 <package> <rust|csharp>}
