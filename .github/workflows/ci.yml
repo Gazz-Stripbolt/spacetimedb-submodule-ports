@@ -29,7 +29,7 @@ jobs:
       - name: C#
         env:
           EXPERIMENTAL_WASM_AOT: 1   # what `spacetime build` sets for NativeAOT-LLVM (net10.0) projects
-        run: for p in crypto retry rate-limit cron; do dotnet build $p/demo/csharp -c Release; done
+        run: for p in crypto retry rate-limit cron presence api-keys grid lobby; do dotnet build $p/demo/csharp -c Release; done
       - name: The embedded time-zone table is in sync with its generator
         run: |
           python3 tools/gen-tz.py
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [crypto, retry, rate-limit, cron]
+        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby]
         lang: [rust, csharp]
     name: e2e (${{ matrix.package }}, ${{ matrix.lang }})
     steps:
@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [crypto, retry, rate-limit, cron]
+        package: [crypto, retry, rate-limit, cron, presence, api-keys, grid, lobby]
     name: parity (${{ matrix.package }})
     steps:
       - uses: actions/checkout@v5

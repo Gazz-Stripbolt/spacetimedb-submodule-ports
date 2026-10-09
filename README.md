@@ -30,10 +30,10 @@ pinned to the upstream commit and kept in sync as the packages evolve.
 | [**rate-limit**](rate-limit) | Fixed-window limits per scope and actor, expiry sweep, admins | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
 | [**cron**](cron) | Calendar (cron expressions, time zones) and interval jobs | ✅ | ✅ | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) `ae25f1d` |
 | resend | Email via Resend | 🚧 | 🚧 | [#5903](https://github.com/clockworklabs/SpacetimeDB/pull/5903) |
-| presence | Presence state and lifecycle helpers | 🚧 | 🚧 | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) |
-| api-keys | Hashed server-to-server keys, scopes, rotation, usage | 🚧 | 🚧 | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) |
-| grid | Square/hex grids, pathfinding, movement ranges | 🚧 | 🚧 | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) |
-| lobby | Matchmaking queues, rooms, seats, Elo | 🚧 | 🚧 | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) |
+| [**presence**](presence) | Who is here: leases that expire, heartbeat, online view, sweep | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
+| [**api-keys**](api-keys) | Hashed server-to-server keys, scopes, rotation, revocation, usage log | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
+| [**grid**](grid) | Square/hex maps, units, obstacles, A* paths, movement ranges | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
+| [**lobby**](lobby) | Matchmaking queues (unranked and ranked bands), rooms, seats, Elo | ✅ | ✅ | [#5908](https://github.com/clockworklabs/SpacetimeDB/pull/5908) `f6ed7dc` |
 | auth | Password and OAuth login, sessions, profiles | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
 | files | Uploads, visibility, HTTP serving | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
 | agents | LLM agents, tool calls, embeddings | 🚧 | 🚧 | [#5905](https://github.com/clockworklabs/SpacetimeDB/pull/5905) |
@@ -84,6 +84,10 @@ package expose an **identical schema** ([`tests/schema-parity.mjs`](tests/schema
 | retry | Validation, admins, backoff timing, give-up, permanent errors, truncation, and the 1,000-row history cap (10) |
 | rate-limit | Scopes, actors, costs, windows, peek, key collisions, sweep, admin reducers and view (8) |
 | cron | **43,632** next-occurrence cases from the real cron-parser 5.5.0, **25,098** tzdata offsets, and 14 scheduler scenarios: repair, recovery, auto-disable, procedures… (18) |
+| presence | Default TTLs, validation, key collisions, touch, upsert, remove, config, sweep batches, heartbeat, views, admins (12) |
+| api-keys | Key derivation, hashing and normalized JSON **byte-identical to TS** (Node HMAC / SHA-256 / `JSON.stringify(JSON.parse(x))`), config, create, verify and its usage log, rotate, revoke, expiry, the 50-key cap, retention (14) |
+| grid | Upstream pathfinding and procedure tests, **240** random maps matching the TS A* and Dijkstra exactly (paths, costs, expansions, order), modes, cells, entities, paths, ranges, cascades (13) |
+| lobby | **300** ranked selections and **300** Elo updates from the TS code, room lifecycle, queues, ranked pools and draws, views, config and sweep (13) |
 
 ```bash
 spacetime start                         # in another terminal

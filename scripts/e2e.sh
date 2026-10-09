@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Publish a package's demo module and run its test suite against it.
 #
-#   scripts/e2e.sh <crypto|retry|rate-limit|cron> <rust|csharp>     (needs `spacetime start`)
+#   scripts/e2e.sh <crypto|retry|rate-limit|cron|presence|api-keys|grid|lobby> <rust|csharp>     (needs `spacetime start`)
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PKG=${1:?usage: $0 <package> <rust|csharp>}

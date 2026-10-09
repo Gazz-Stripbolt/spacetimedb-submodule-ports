@@ -27,6 +27,11 @@ committed rows, each part in key order. (The TS retry code has a comment about t
 `ran_at().filter(..)` is the oldest" is therefore wrong once a transaction has inserted rows. `retry` finds the
 true minimum by taking either the first row or the first row where the key goes down again.
 
+**It reaches upstream's own logic, too:** `@spacetimedb/lobby` picks matches from `by_pool_status_created_at` in
+the transaction that inserted the newest ticket. The newcomer therefore comes first: it takes seat 0, and it's the
+first anchor ranked matching tries, although the code's comments say "oldest first". The lobby port keeps the
+engine's order, so it behaves like TS on the same engine, and documents it in [lobby/README.md](../lobby/README.md).
+
 ## Case conversion details that affect ports
 
 - **Digits start a new word.** `crypto_sha256` → `crypto_sha_256`, `base64` → `base_64`.
@@ -75,3 +80,29 @@ transitions from 2025 for the zones whose future isn't a simple rule:
 
 Offsets match tzdata (via Python's `zoneinfo`) at 25,098 instants, covering both sides of every transition from
 2025 to 2031. The cost is about 25 KB of source per language.
+
+## Porting gotchas (phase 2: presence, api-keys, grid, lobby)
+
+- **Rust can't range-filter a `String` index column with a `String` bound.** `filter("".to_string()..)` doesn't
+  compile (`RangeFrom<String>` isn't an `IndexScanRangeBoundsTerminator`), but `filter(""..)` with `&str` does. C#'s
+  `Bound<string>` works.
+- **A C# `[SpacetimeDB.Type]` and a reducer/procedure can't share a name.** A type `DemoAstar` next to a procedure
+  `DemoAstar` breaks the generated `ModuleRegistration` ("The type name 'BSATN' does not exist in the type
+  'ModuleRegistration.DemoAstar'").
+- **JS semantics that need care in Rust and C#:**
+  - **Rounding:** `Math.round` is `floor(x + 0.5)`. C#'s `Math.Round` rounds half to even.
+  - **Sorting:** `Array.prototype.sort` is stable. C#'s `List.Sort` isn't, so the ports use `OrderBy`.
+  - **Lengths:** string lengths are UTF-16 code units.
+  - **Whitespace:** `trim()` and `\s` cover Unicode spaces and BOM, not just ASCII.
+- **Byte-identical JSON:** api-keys stores `JSON.stringify(JSON.parse(input))`. The ports carry a small
+  JSON.parse/stringify that reproduces JS exactly:
+  - property order, with integer-like keys first, ascending
+  - number formatting via ECMAScript `Number::toString` on the shortest round-trip digits
+  - escaping, including lone surrogates
+  - duplicate keys: the last value wins, at the first key's position
+  The test suite compares it with Node on edge cases. Library serializers (`serde_json`, `System.Text.Json`) differ
+  in several of these.
+- **A* and Dijkstra parity** needs the same heap, not just the same algorithm: tie-breaking decides which of several
+  equal-cost paths is returned and how many nodes are expanded. grid ports TS's binary heap step for step and
+  matches it on 240 generated maps.
+

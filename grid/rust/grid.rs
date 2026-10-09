@@ -274,7 +274,16 @@ pub struct Coord {
 }
 
 const SQUARE_4: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
-const SQUARE_8: [(i32, i32); 8] = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)];
+const SQUARE_8: [(i32, i32); 8] = [
+    (0, -1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+    (0, 1),
+    (-1, 1),
+    (-1, 0),
+    (-1, -1),
+];
 const HEX_AXIAL: [(i32, i32); 6] = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)];
 
 /// Neighbours in the TS order. `kind` is `"square"` or `"hex"`; `connectivity` 4 or 8.
@@ -288,7 +297,10 @@ pub fn neighbors(kind: &str, c: Coord, connectivity: i32) -> Vec<Coord> {
     };
     offsets
         .iter()
-        .map(|(dx, dy)| Coord { x: c.x.wrapping_add(*dx), y: c.y.wrapping_add(*dy) })
+        .map(|(dx, dy)| Coord {
+            x: c.x.wrapping_add(*dx),
+            y: c.y.wrapping_add(*dy),
+        })
         .collect()
 }
 
@@ -297,7 +309,9 @@ pub fn manhattan(a: Coord, b: Coord) -> i64 {
 }
 
 pub fn chebyshev(a: Coord, b: Coord) -> i64 {
-    (a.x as i64 - b.x as i64).abs().max((a.y as i64 - b.y as i64).abs())
+    (a.x as i64 - b.x as i64)
+        .abs()
+        .max((a.y as i64 - b.y as i64).abs())
 }
 
 /// Hex axial distance; (q, r) stored as (x, y).
@@ -396,13 +410,22 @@ pub fn find_path_astar(
     let h = |c: Coord| heuristic.map_or(0, |f| f(c, goal));
     let cap = max_expansions.unwrap_or(DEFAULT_MAX_EXPANSIONS as i64);
     if start == goal {
-        return AstarResult { found: true, cells: vec![start], cost: 0, expanded: 0 };
+        return AstarResult {
+            found: true,
+            cells: vec![start],
+            cost: 0,
+            expanded: 0,
+        };
     }
     let mut g_score: HashMap<Coord, i64> = HashMap::new();
     let mut parent: HashMap<Coord, Coord> = HashMap::new();
     let mut open = MinHeap::default();
     g_score.insert(start, 0);
-    open.push(HeapEntry { key: h(start), node: start, g_score: 0 });
+    open.push(HeapEntry {
+        key: h(start),
+        node: start,
+        g_score: 0,
+    });
 
     let mut expanded = 0;
     while let Some(cur) = (expanded < cap).then(|| open.pop()).flatten() {
@@ -419,7 +442,12 @@ pub fn find_path_astar(
                 n = *p;
             }
             path.reverse();
-            return AstarResult { found: true, cells: path, cost: cur.g_score, expanded };
+            return AstarResult {
+                found: true,
+                cells: path,
+                cost: cur.g_score,
+                expanded,
+            };
         }
         for nb in neighbors(cur.node) {
             let step = cost(nb);
@@ -430,11 +458,20 @@ pub fn find_path_astar(
             if tentative < g_score.get(&nb).copied().unwrap_or(i64::MAX) {
                 g_score.insert(nb, tentative);
                 parent.insert(nb, cur.node);
-                open.push(HeapEntry { key: tentative + h(nb), node: nb, g_score: tentative });
+                open.push(HeapEntry {
+                    key: tentative + h(nb),
+                    node: nb,
+                    g_score: tentative,
+                });
             }
         }
     }
-    AstarResult { found: false, cells: Vec::new(), cost: 0, expanded }
+    AstarResult {
+        found: false,
+        cells: Vec::new(),
+        cost: 0,
+        expanded,
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -458,12 +495,22 @@ pub fn dijkstra(
     let mut index: HashMap<Coord, usize> = HashMap::new();
     let mut open = MinHeap::default();
     index.insert(start, 0);
-    order.push(DijkstraNode { cell: start, cost: 0, from: None });
-    open.push(HeapEntry { key: 0, node: start, g_score: 0 });
+    order.push(DijkstraNode {
+        cell: start,
+        cost: 0,
+        from: None,
+    });
+    open.push(HeapEntry {
+        key: 0,
+        node: start,
+        g_score: 0,
+    });
 
     let mut expanded = 0;
     while let Some(cur) = (expanded < cap).then(|| open.pop()).flatten() {
-        let Some(&k) = index.get(&cur.node) else { continue };
+        let Some(&k) = index.get(&cur.node) else {
+            continue;
+        };
         if cur.g_score > order[k].cost {
             continue;
         }
@@ -480,7 +527,11 @@ pub fn dijkstra(
             if tentative > max_cost {
                 continue;
             }
-            let node = DijkstraNode { cell: nb, cost: tentative, from: Some(cur.node) };
+            let node = DijkstraNode {
+                cell: nb,
+                cost: tentative,
+                from: Some(cur.node),
+            };
             match index.get(&nb) {
                 Some(&j) if tentative >= order[j].cost => continue,
                 Some(&j) => order[j] = node, // Map.set keeps the key's position
@@ -489,7 +540,11 @@ pub fn dijkstra(
                     order.push(node);
                 }
             }
-            open.push(HeapEntry { key: tentative, node: nb, g_score: tentative });
+            open.push(HeapEntry {
+                key: tentative,
+                node: nb,
+                g_score: tentative,
+            });
         }
     }
     order
@@ -504,7 +559,11 @@ fn utf16_len(s: &str) -> usize {
 }
 
 /// Validates and inserts a grid. Returns its id.
-pub fn create_grid(ctx: &ReducerContext, args: &CreateGridArgs, owner: &str) -> Result<u64, String> {
+pub fn create_grid(
+    ctx: &ReducerContext,
+    args: &CreateGridArgs,
+    owner: &str,
+) -> Result<u64, String> {
     let len = utf16_len(&args.name);
     if len == 0 || len > MAX_NAME_LENGTH {
         return Err(errors::INVALID_NAME.into());
@@ -536,7 +595,11 @@ pub fn create_grid(ctx: &ReducerContext, args: &CreateGridArgs, owner: &str) -> 
         width: args.width,
         height: args.height,
         default_cost: args.default_cost,
-        connectivity: if args.kind == GRID_KIND_HEX { 6 } else { args.connectivity },
+        connectivity: if args.kind == GRID_KIND_HEX {
+            6
+        } else {
+            args.connectivity
+        },
         mode: args.mode.clone(),
         created_at: ctx.timestamp,
         updated_at: ctx.timestamp,
@@ -550,13 +613,31 @@ pub fn delete_grid(ctx: &ReducerContext, grid_id: u64, owner: &str) -> Result<()
     if grid.owner_user_id != owner {
         return Err(errors::NOT_OWNER.into());
     }
-    for c in ctx.db.cell_state().grid_id().filter(grid.id).collect::<Vec<_>>() {
+    for c in ctx
+        .db
+        .cell_state()
+        .grid_id()
+        .filter(grid.id)
+        .collect::<Vec<_>>()
+    {
         ctx.db.cell_state().id().delete(c.id);
     }
-    for e in ctx.db.grid_entity().grid_id().filter(grid.id).collect::<Vec<_>>() {
+    for e in ctx
+        .db
+        .grid_entity()
+        .grid_id()
+        .filter(grid.id)
+        .collect::<Vec<_>>()
+    {
         ctx.db.grid_entity().id().delete(e.id);
     }
-    for p in ctx.db.entity_path().grid_id().filter(grid.id).collect::<Vec<_>>() {
+    for p in ctx
+        .db
+        .entity_path()
+        .grid_id()
+        .filter(grid.id)
+        .collect::<Vec<_>>()
+    {
         ctx.db.entity_path().entity_id().delete(p.entity_id);
     }
     ctx.db.grid().id().delete(grid.id);
@@ -564,9 +645,20 @@ pub fn delete_grid(ctx: &ReducerContext, grid_id: u64, owner: &str) -> Result<()
 }
 
 /// `cost <= 0` blocks; the default cost with no terrain removes the sparse row.
-pub fn set_cell_cost(ctx: &ReducerContext, args: &SetCellCostArgs, owner: &str) -> Result<(), String> {
+pub fn set_cell_cost(
+    ctx: &ReducerContext,
+    args: &SetCellCostArgs,
+    owner: &str,
+) -> Result<(), String> {
     let grid = require_grid(ctx, args.grid_id, owner)?;
-    upsert_cell_state(ctx, &grid, args.x, args.y, args.cost, args.terrain.as_deref())
+    upsert_cell_state(
+        ctx,
+        &grid,
+        args.x,
+        args.y,
+        args.cost,
+        args.terrain.as_deref(),
+    )
 }
 
 /// Up to 1,000 cells at once.
@@ -582,7 +674,11 @@ pub fn paint_cells(ctx: &ReducerContext, args: &PaintCellsArgs, owner: &str) -> 
 }
 
 /// Returns the new entity's id. The entity belongs to `owner`.
-pub fn place_entity(ctx: &ReducerContext, args: &PlaceEntityArgs, owner: &str) -> Result<u64, String> {
+pub fn place_entity(
+    ctx: &ReducerContext,
+    args: &PlaceEntityArgs,
+    owner: &str,
+) -> Result<u64, String> {
     let len = utf16_len(&args.kind);
     if len == 0 || len > MAX_KIND_LENGTH {
         return Err(errors::INVALID_ENTITY_KIND.into());
@@ -591,7 +687,13 @@ pub fn place_entity(ctx: &ReducerContext, args: &PlaceEntityArgs, owner: &str) -
         return Err(errors::INVALID_ENTITY_LABEL.into());
     }
     let grid = require_grid(ctx, args.grid_id, owner)?;
-    assert_in_bounds(&grid, Coord { x: args.x, y: args.y })?;
+    assert_in_bounds(
+        &grid,
+        Coord {
+            x: args.x,
+            y: args.y,
+        },
+    )?;
     let row = ctx.db.grid_entity().insert(GridEntity {
         id: 0,
         grid_id: grid.id,
@@ -610,14 +712,28 @@ pub fn place_entity(ctx: &ReducerContext, args: &PlaceEntityArgs, owner: &str) -
 /// Moves one step to an adjacent cell that isn't blocked by terrain or by another blocking
 /// entity. Only the entity's owner may move it.
 pub fn move_entity(ctx: &ReducerContext, args: &MoveEntityArgs, owner: &str) -> Result<(), String> {
-    let ent = ctx.db.grid_entity().id().find(args.entity_id).ok_or(errors::ENTITY_NOT_FOUND)?;
+    let ent = ctx
+        .db
+        .grid_entity()
+        .id()
+        .find(args.entity_id)
+        .ok_or(errors::ENTITY_NOT_FOUND)?;
     if ent.owner_user_id != owner {
         return Err(errors::ENTITY_NOT_OWNER.into());
     }
-    let grid = ctx.db.grid().id().find(ent.grid_id).ok_or(errors::NOT_FOUND)?;
-    let to = Coord { x: args.to_x, y: args.to_y };
+    let grid = ctx
+        .db
+        .grid()
+        .id()
+        .find(ent.grid_id)
+        .ok_or(errors::NOT_FOUND)?;
+    let to = Coord {
+        x: args.to_x,
+        y: args.to_y,
+    };
     assert_in_bounds(&grid, to)?;
-    let adjacent = neighbors(&grid.kind, Coord { x: ent.x, y: ent.y }, grid.connectivity).contains(&to);
+    let adjacent =
+        neighbors(&grid.kind, Coord { x: ent.x, y: ent.y }, grid.connectivity).contains(&to);
     if !adjacent {
         return Err(errors::MOVE_NOT_ADJACENT.into());
     }
@@ -640,10 +756,26 @@ pub fn move_entity(ctx: &ReducerContext, args: &MoveEntityArgs, owner: &str) -> 
 }
 
 /// A* over the current cost map; with `store_for`, also writes that entity's `entity_path`.
-pub fn compute_path(ctx: &ReducerContext, args: &ComputePathArgs, owner: &str) -> Result<PathResult, String> {
+pub fn compute_path(
+    ctx: &ReducerContext,
+    args: &ComputePathArgs,
+    owner: &str,
+) -> Result<PathResult, String> {
     let grid = require_grid(ctx, args.grid_id, owner)?;
-    assert_in_bounds(&grid, Coord { x: args.start_x, y: args.start_y })?;
-    assert_in_bounds(&grid, Coord { x: args.end_x, y: args.end_y })?;
+    assert_in_bounds(
+        &grid,
+        Coord {
+            x: args.start_x,
+            y: args.start_y,
+        },
+    )?;
+    assert_in_bounds(
+        &grid,
+        Coord {
+            x: args.end_x,
+            y: args.end_y,
+        },
+    )?;
     let max_expansions = args.max_expansions.unwrap_or(PATH_MAX_EXPANSIONS);
     if !(1..=PATH_MAX_EXPANSIONS).contains(&max_expansions) {
         return Err(errors::INVALID_MAX_EXPANSIONS.into());
@@ -651,22 +783,42 @@ pub fn compute_path(ctx: &ReducerContext, args: &ComputePathArgs, owner: &str) -
     let cost_map = build_cost_map(ctx, &grid);
     let heuristic = |a: Coord, b: Coord| distance(&grid.kind, a, b, grid.connectivity);
     let result = find_path_astar(
-        Coord { x: args.start_x, y: args.start_y },
-        Coord { x: args.end_x, y: args.end_y },
+        Coord {
+            x: args.start_x,
+            y: args.start_y,
+        },
+        Coord {
+            x: args.end_x,
+            y: args.end_y,
+        },
         |c| cost_map.get(&c).copied().unwrap_or(grid.default_cost) as i64,
         |c| neighbors_in_bounds(&grid, c),
         Some(&heuristic),
         Some(max_expansions as i64),
     );
     if !result.found {
-        return Ok(PathResult { found: false, cells: Vec::new(), cost: 0, expanded: result.expanded as i32 });
+        return Ok(PathResult {
+            found: false,
+            cells: Vec::new(),
+            cost: 0,
+            expanded: result.expanded as i32,
+        });
     }
     if result.cells.len() > MAX_RESULT_CELLS {
         return Err(errors::PATH_TOO_LONG.into());
     }
-    let cells: Vec<PathCell> = result.cells.iter().map(|c| PathCell { x: c.x, y: c.y }).collect();
+    let cells: Vec<PathCell> = result
+        .cells
+        .iter()
+        .map(|c| PathCell { x: c.x, y: c.y })
+        .collect();
     if let Some(entity_id) = args.store_for {
-        let entity = ctx.db.grid_entity().id().find(entity_id).ok_or(errors::ENTITY_NOT_FOUND)?;
+        let entity = ctx
+            .db
+            .grid_entity()
+            .id()
+            .find(entity_id)
+            .ok_or(errors::ENTITY_NOT_FOUND)?;
         if entity.grid_id != grid.id {
             return Err(errors::ENTITY_GRID_MISMATCH.into());
         }
@@ -686,16 +838,34 @@ pub fn compute_path(ctx: &ReducerContext, args: &ComputePathArgs, owner: &str) -
             ctx.db.entity_path().insert(row);
         }
     }
-    Ok(PathResult { found: true, cells, cost: result.cost as i32, expanded: result.expanded as i32 })
+    Ok(PathResult {
+        found: true,
+        cells,
+        cost: result.cost as i32,
+        expanded: result.expanded as i32,
+    })
 }
 
 /// Every cell reachable from the origin within `max_cost` (Dijkstra), with its cost.
-pub fn cells_in_range(ctx: &ReducerContext, args: &CellsInRangeArgs, owner: &str) -> Result<CellsInRangeResult, String> {
+pub fn cells_in_range(
+    ctx: &ReducerContext,
+    args: &CellsInRangeArgs,
+    owner: &str,
+) -> Result<CellsInRangeResult, String> {
     let grid = require_grid(ctx, args.grid_id, owner)?;
-    assert_in_bounds(&grid, Coord { x: args.origin_x, y: args.origin_y })?;
+    assert_in_bounds(
+        &grid,
+        Coord {
+            x: args.origin_x,
+            y: args.origin_y,
+        },
+    )?;
     let cost_map = build_cost_map(ctx, &grid);
     let reached = dijkstra(
-        Coord { x: args.origin_x, y: args.origin_y },
+        Coord {
+            x: args.origin_x,
+            y: args.origin_y,
+        },
         |c| cost_map.get(&c).copied().unwrap_or(grid.default_cost) as i64,
         |c| neighbors_in_bounds(&grid, c),
         args.max_cost as i64,
@@ -707,7 +877,11 @@ pub fn cells_in_range(ctx: &ReducerContext, args: &CellsInRangeArgs, owner: &str
     Ok(CellsInRangeResult {
         cells: reached
             .iter()
-            .map(|n| ReachableCell { x: n.cell.x, y: n.cell.y, cost: n.cost as i32 })
+            .map(|n| ReachableCell {
+                x: n.cell.x,
+                y: n.cell.y,
+                cost: n.cost as i32,
+            })
             .collect(),
     })
 }
@@ -736,7 +910,11 @@ fn neighbors_in_bounds(grid: &Grid, c: Coord) -> Vec<Coord> {
 }
 
 fn find_cell_state(ctx: &ReducerContext, grid_id: u64, c: Coord) -> Option<CellState> {
-    ctx.db.cell_state().by_grid_cell().filter((grid_id, c.x, c.y)).next()
+    ctx.db
+        .cell_state()
+        .by_grid_cell()
+        .filter((grid_id, c.x, c.y))
+        .next()
 }
 
 fn cell_cost(ctx: &ReducerContext, grid: &Grid, c: Coord) -> i32 {
@@ -767,7 +945,11 @@ fn upsert_cell_state(
     }
     match existing {
         Some(e) => {
-            ctx.db.cell_state().id().update(CellState { cost, terrain: terrain.map(String::from), ..e });
+            ctx.db.cell_state().id().update(CellState {
+                cost,
+                terrain: terrain.map(String::from),
+                ..e
+            });
         }
         None => {
             ctx.db.cell_state().insert(CellState {
