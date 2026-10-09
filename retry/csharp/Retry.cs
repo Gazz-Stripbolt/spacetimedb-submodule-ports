@@ -245,7 +245,7 @@ public static partial class Module
     [SpacetimeDB.Reducer]
     public static void RetryFire(ReducerContext ctx, RetryTask arg)
     {
-        if (ctx.Sender != ctx.Identity) throw new Exception(RetryErrors.NotAuthorized);
+        if (ctx.Sender != ctx.DatabaseIdentity) throw new Exception(RetryErrors.NotAuthorized);
         RetryRunAttempt(ctx, arg);
     }
 

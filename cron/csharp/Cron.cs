@@ -457,7 +457,7 @@ public static partial class Module
 
     static void CronRequireDatabaseCaller(ReducerContext ctx)
     {
-        if (ctx.Sender != ctx.Identity) throw new Exception(CronErrors.NotAuthorized);
+        if (ctx.Sender != ctx.DatabaseIdentity) throw new Exception(CronErrors.NotAuthorized);
     }
 
     static string CronInvocationId(string job, ulong generation, ulong sequence) => $"{job}:{generation}:{sequence}";

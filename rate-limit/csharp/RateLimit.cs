@@ -259,7 +259,7 @@ public static partial class Module
     [SpacetimeDB.Reducer]
     public static void RateLimitSweep(ReducerContext ctx, RateLimitSweepTick tick)
     {
-        if (ctx.Sender != ctx.Identity) throw new Exception(RateLimitErrors.NotAuthorized);
+        if (ctx.Sender != ctx.DatabaseIdentity) throw new Exception(RateLimitErrors.NotAuthorized);
         var batch = ctx.Db.RateLimitConfig.Singleton.Find(true)?.SweepBatch ?? RateLimitDefaultSweepBatch;
         RateLimitSweepExpired(ctx.Db, ctx.Timestamp, batch);
     }
