@@ -1,6 +1,6 @@
 # Findings
 
-What porting the official TypeScript submodules to Rust and C# turned up, on SpacetimeDB 2.11.
+What porting the official TypeScript submodules to Rust and C# turned up, on Spacetime 2.11.
 
 ## Bug: the generated C# `VolatileNonatomicScheduleImmediate<Reducer>` helper does nothing
 

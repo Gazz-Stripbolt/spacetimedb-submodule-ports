@@ -9,7 +9,7 @@ C#: `Crypto.cs` in the same project) for the SHA-256 ETags.
   both private.
 - Like TS, the package registers **no reducers**. The host exposes the operations it wants and derives the owner from
   its authenticated caller. The demo uses the caller's identity, as the upstream example does.
-- **Column names:** the SHA-256 column is `sha_256_hex` canonically in both ports (SpacetimeDB's snake_case conversion
+- **Column names:** the SHA-256 column is `sha_256_hex` canonically in both ports (Spacetime's snake_case conversion
   splits letters from digits).
 
 **Same behaviour as TS:**

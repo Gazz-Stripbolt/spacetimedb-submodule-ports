@@ -12,7 +12,7 @@ package feels the same and stays easy to update when upstream changes.
   README.md                         TS API → Rust API → C# API, differences, pinned commit
   demo/rust/                        a small module exercising the port (the TS example's shape)
   demo/csharp/                      the same module in C#
-tests/<name>.test.mjs               one suite for both languages, over SpacetimeDB's HTTP API
+tests/<name>.test.mjs               one suite for both languages, over Spacetime's HTTP API
 ```
 
 `scripts/e2e.sh <name> <rust|csharp>` publishes a demo and runs its suite; `scripts/parity.sh <name>` publishes
@@ -23,7 +23,7 @@ both and checks the schemas match (`tests/schema-parity.mjs`). Add the package t
 1. **Pin and say so.** Each file's header names the package, the PR and commit it was ported from, the license
    (Apache-2.0), and a bullet list of changes from the original. Update the commit when you re-sync.
 2. **Same schema as upstream.** Table, column, reducer, procedure and view names, column order and types follow
-   the TS package. The canonical names come from SpacetimeDB's default snake_case conversion, so write Rust
+   the TS package. The canonical names come from Spacetime's default snake_case conversion, so write Rust
    `snake_case` and C# `PascalCase` (`Accessor = "RetryTask"` → `retry_task`). Check with `tests/schema-parity.mjs`:
    Rust and C# must match exactly (parameter names may differ in style; 2.11 doesn't canonicalize them).
 3. **Submodule namespaces become prefixes only where needed.** A TS submodule's tables live under a namespace

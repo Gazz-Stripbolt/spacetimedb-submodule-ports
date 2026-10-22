@@ -62,7 +62,7 @@ LobbyReportMatchResult(LobbyTx.Of(ctx), roomId, winner);    // null = a draw
 - **C# context:** C# helpers take a `LobbyTx` (db, timestamp, sender, UUID source), like api-keys.
 
 **Seat order is not strictly oldest first.** Matching reads `by_pool_status_created_at` inside the transaction that
-just inserted the newcomer's ticket. SpacetimeDB returns a transaction's own inserts before committed rows (see
+just inserted the newcomer's ticket. Spacetime returns a transaction's own inserts before committed rows (see
 [FINDINGS](../docs/FINDINGS.md#range-scans-inside-a-transaction-arent-globally-ordered)), so the newcomer comes
 first: it gets seat 0, and in ranked matching it is the first anchor tried. TS runs on the same engine. The ports
 keep the engine's order rather than "fixing" it, so they behave like TS, and the tests pin it.
