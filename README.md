@@ -12,7 +12,7 @@ ports each package to one Rust file and one C# file with **the same tables, redu
 pinned to the upstream commit and kept in sync as the packages evolve.
 
 [![CI](https://github.com/Gazz-Stripbolt/spacetimedb-submodule-ports/actions/workflows/ci.yml/badge.svg)](https://github.com/Gazz-Stripbolt/spacetimedb-submodule-ports/actions/workflows/ci.yml)
-![Spacetime 2.12](https://img.shields.io/badge/Spacetime-2.12-e8730c)
+![Spacetime 2.14](https://img.shields.io/badge/Spacetime-2.14-e8730c)
 ![Rust](https://img.shields.io/badge/Rust-drop--in-b7410e)
 ![C#](https://img.shields.io/badge/C%23-drop--in-512bd4)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)

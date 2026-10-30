@@ -13,7 +13,7 @@
 //! and these crates (pure Rust, build for wasm32):
 //!
 //! ```toml
-//! spacetimedb = { version = "2.11.*", features = ["unstable"] }
+//! spacetimedb = { version = "2.14.*", features = ["unstable"] }
 //! http = "1"
 //! p256 = { version = "0.13", default-features = false, features = ["ecdsa", "arithmetic"] }
 //! scrypt = { version = "0.11", default-features = false }
@@ -1157,7 +1157,7 @@ pub fn request_session(
     token_session(tx, cfg, &token)
 }
 
-/// The user id of the live session presented to an HTTP handler (which has no caller identity).
+/// The user id of the live session presented to an HTTP handler (whose sender is a new identity on every request).
 pub fn request_user_id(tx: &ReducerContext, req: &Request) -> Option<String> {
     let cfg = tx.db.auth_config().singleton().find(true)?;
     request_session(tx, &cfg, req).map(|s| s.user_id)
