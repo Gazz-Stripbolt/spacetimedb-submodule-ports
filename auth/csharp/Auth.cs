@@ -1080,7 +1080,7 @@ public static partial class Module
     public static AuthSession? AuthRequestSession(AuthTx tx, AuthConfig cfg, HttpRequest req) =>
         AuthReadBearer(req, cfg.CookieName) is { } token ? AuthTokenSession(tx, cfg, token) : null;
 
-    /// <summary>The user id of the live session presented to an HTTP handler (which has no caller identity).</summary>
+    /// <summary>The user id of the live session presented to an HTTP handler (whose sender is a new identity on every request).</summary>
     public static string? AuthRequestUserId(AuthTx tx, HttpRequest req) =>
         tx.Db.AuthConfig.Singleton.Find(true) is { } cfg ? AuthRequestSession(tx, cfg, req)?.UserId : null;
 
